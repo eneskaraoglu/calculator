@@ -59,6 +59,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
   String _expression = '0';
   String _result = '0';
+  final List<_HistoryEntry> _history = <_HistoryEntry>[];
 
   void _handleTap(String value) {
     setState(() {
@@ -71,7 +72,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
           _deleteLast();
           break;
         case '=':
-          _calculate(commitResult: true);
+          _commitCalculation();
           break;
         case '+/-':
           _toggleSign();
@@ -171,6 +172,127 @@ class _CalculatorPageState extends State<CalculatorPage> {
     if (commitResult) {
       _expression = formatted;
     }
+  }
+
+  void _commitCalculation() {
+    final originalExpression = _expression;
+    _calculate(commitResult: true);
+
+    if (_result == 'Error') {
+      return;
+    }
+
+    final entry = _HistoryEntry(
+      expression: originalExpression,
+      result: _result,
+    );
+
+    if (_history.isEmpty ||
+        _history.first.expression != entry.expression ||
+        _history.first.result != entry.result) {
+      _history.insert(0, entry);
+    }
+  }
+
+  void _openHistorySheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A1A),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.55,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        'History',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      const Spacer(),
+                      if (_history.isNotEmpty)
+                        TextButton(
+                          onPressed: () {
+                            setState(_history.clear);
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('Clear all'),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: _history.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No calculations yet',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: Colors.white60,
+                                  ),
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: _history.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 10),
+                            itemBuilder: (BuildContext context, int index) {
+                              final entry = _history[index];
+                              return Material(
+                                color: const Color(0xFF252525),
+                                borderRadius: BorderRadius.circular(20),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(20),
+                                  onTap: () {
+                                    setState(() {
+                                      _expression = entry.expression;
+                                      _result = entry.result;
+                                    });
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          entry.expression,
+                                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                                color: Colors.white70,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          '= ${entry.result}',
+                                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   String _currentNumber() {
@@ -329,6 +451,16 @@ class _CalculatorPageState extends State<CalculatorPage> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: <Widget>[
+                              Align(
+                                alignment: Alignment.topLeft,
+                                child: IconButton(
+                                  onPressed: _openHistorySheet,
+                                  icon: const Icon(Icons.history_rounded),
+                                  color: Colors.white70,
+                                  tooltip: 'History',
+                                ),
+                              ),
+                              const Spacer(),
                               FittedBox(
                                 fit: BoxFit.scaleDown,
                                 alignment: Alignment.centerRight,
@@ -456,4 +588,14 @@ class _CalculatorButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HistoryEntry {
+  const _HistoryEntry({
+    required this.expression,
+    required this.result,
+  });
+
+  final String expression;
+  final String result;
 }
