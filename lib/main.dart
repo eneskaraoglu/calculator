@@ -14,10 +14,10 @@ class CalculatorApp extends StatelessWidget {
       title: 'Calculator',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1B4332),
+          seedColor: const Color(0xFFFF8C42),
           brightness: Brightness.dark,
         ),
-        scaffoldBackgroundColor: const Color(0xFF081C15),
+        scaffoldBackgroundColor: const Color(0xFF121212),
         textTheme: ThemeData.dark().textTheme,
         useMaterial3: true,
       ),
@@ -298,7 +298,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(32),
                     gradient: const LinearGradient(
-                      colors: <Color>[Color(0xFF0B2B26), Color(0xFF163832)],
+                      colors: <Color>[Color(0xFF1E1E1E), Color(0xFF2B2B2B)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -349,10 +349,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
                       label: label,
                       onTap: () => _handleTap(label),
                       backgroundColor: isPrimary
-                          ? const Color(0xFF2D6A4F)
+                          ? const Color(0xFFFF8C42)
                           : isUtility
-                              ? const Color(0xFF1B4332)
-                              : const Color(0xFF10312B),
+                              ? const Color(0xFF3A3A3A)
+                              : const Color(0xFF252525),
                       foregroundColor: Colors.white,
                     );
                   },
