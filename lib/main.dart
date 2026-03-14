@@ -287,79 +287,133 @@ class _CalculatorPageState extends State<CalculatorPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: <Widget>[
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 24),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(32),
-                    gradient: const LinearGradient(
-                      colors: <Color>[Color(0xFF1E1E1E), Color(0xFF2B2B2B)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final bool isCompactHeight = constraints.maxHeight < 700;
+            final double horizontalPadding = constraints.maxWidth > 700 ? 24 : 16;
+            final double verticalPadding = isCompactHeight ? 10 : 16;
+            final double sectionSpacing = isCompactHeight ? 12 : 20;
+            final double gridSpacing = isCompactHeight ? 8 : 12;
+            final double maxContentWidth = constraints.maxWidth > 900 ? 560 : 640;
+            final double buttonFontSize = isCompactHeight ? 24 : 28;
+            final double expressionFontSize = isCompactHeight ? 28 : 34;
+            final double resultFontSize = isCompactHeight ? 42 : 48;
+
+            return Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxContentWidth),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: verticalPadding,
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisAlignment: MainAxisAlignment.end,
                     children: <Widget>[
-                      Text(
-                        _expression,
-                        maxLines: 2,
-                        textAlign: TextAlign.right,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              color: Colors.white70,
+                      Flexible(
+                        flex: isCompactHeight ? 4 : 5,
+                        child: Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: isCompactHeight ? 16 : 24,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(32),
+                            gradient: const LinearGradient(
+                              colors: <Color>[Color(0xFF1E1E1E), Color(0xFF2B2B2B)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: <Widget>[
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  _expression,
+                                  maxLines: 1,
+                                  textAlign: TextAlign.right,
+                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                        color: Colors.white70,
+                                        fontSize: expressionFontSize,
+                                      ),
+                                ),
+                              ),
+                              SizedBox(height: isCompactHeight ? 8 : 12),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  _result,
+                                  maxLines: 1,
+                                  textAlign: TextAlign.right,
+                                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                        fontSize: resultFontSize,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        _result,
-                        maxLines: 1,
-                        textAlign: TextAlign.right,
-                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
+                      SizedBox(height: sectionSpacing),
+                      Flexible(
+                        flex: 8,
+                        child: LayoutBuilder(
+                          builder: (BuildContext context, BoxConstraints keypadConstraints) {
+                            const int columnCount = 4;
+                            const int rowCount = 5;
+                            final double itemWidth =
+                                (keypadConstraints.maxWidth - (gridSpacing * (columnCount - 1))) /
+                                    columnCount;
+                            final double itemHeight =
+                                (keypadConstraints.maxHeight - (gridSpacing * (rowCount - 1))) /
+                                    rowCount;
+                            final double childAspectRatio =
+                                itemHeight <= 0 ? 1 : itemWidth / itemHeight;
+
+                            return GridView.builder(
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _buttons.length,
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: columnCount,
+                                crossAxisSpacing: gridSpacing,
+                                mainAxisSpacing: gridSpacing,
+                                childAspectRatio: childAspectRatio,
+                              ),
+                              itemBuilder: (context, index) {
+                                final label = _buttons[index];
+                                final isPrimary = label == '=' || _isOperator(label);
+                                final isUtility =
+                                    label == 'C' || label == 'DEL' || label == '+/-' || label == '%';
+
+                                return _CalculatorButton(
+                                  label: label,
+                                  onTap: () => _handleTap(label),
+                                  backgroundColor: isPrimary
+                                      ? const Color(0xFFFF8C42)
+                                      : isUtility
+                                          ? const Color(0xFF3A3A3A)
+                                          : const Color(0xFF252525),
+                                  foregroundColor: Colors.white,
+                                  fontSize: buttonFontSize,
+                                );
+                              },
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              Expanded(
-                flex: 2,
-                child: GridView.builder(
-                  itemCount: _buttons.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 1.05,
-                  ),
-                  itemBuilder: (context, index) {
-                    final label = _buttons[index];
-                    final isPrimary = label == '=' || _isOperator(label);
-                    final isUtility = label == 'C' || label == 'DEL' || label == '+/-' || label == '%';
-
-                    return _CalculatorButton(
-                      label: label,
-                      onTap: () => _handleTap(label),
-                      backgroundColor: isPrimary
-                          ? const Color(0xFFFF8C42)
-                          : isUtility
-                              ? const Color(0xFF3A3A3A)
-                              : const Color(0xFF252525),
-                      foregroundColor: Colors.white,
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -372,12 +426,14 @@ class _CalculatorButton extends StatelessWidget {
     required this.onTap,
     required this.backgroundColor,
     required this.foregroundColor,
+    required this.fontSize,
   });
 
   final String label;
   final VoidCallback onTap;
   final Color backgroundColor;
   final Color foregroundColor;
+  final double fontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -393,6 +449,7 @@ class _CalculatorButton extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: foregroundColor,
                   fontWeight: FontWeight.w700,
+                  fontSize: fontSize,
                 ),
           ),
         ),
